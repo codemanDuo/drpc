@@ -1,4 +1,4 @@
-package server;
+package core;
 
 import common.entity.RpcRequest;
 import common.entity.RpcResponse;

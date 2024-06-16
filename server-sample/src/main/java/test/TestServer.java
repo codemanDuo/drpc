@@ -1,9 +1,9 @@
 package test;
 
 import api.HelloService;
-import registry.DefaultServiceRegistry;
-import registry.ServiceRegistry;
-import server.RpcServer;
+import core.registry.DefaultServiceRegistry;
+import core.registry.ServiceRegistry;
+import core.socket.server.SocketServer;
 
 
 
@@ -13,7 +13,7 @@ public class TestServer {
         HelloService helloService = new HelloServiceImpl();
         ServiceRegistry serviceRegistry = new DefaultServiceRegistry();
         serviceRegistry.register(helloService);
-        RpcServer rpcServer = new RpcServer(serviceRegistry);
+        SocketServer rpcServer = new SocketServer(serviceRegistry);
         rpcServer.start(9000);
     }
 }

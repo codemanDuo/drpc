@@ -1,4 +1,4 @@
-package registry;
+package core.registry;
 
 /**
  * 服务注册接口
