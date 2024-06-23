@@ -3,13 +3,16 @@ package common.entity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 @Data
+@NoArgsConstructor
 @AllArgsConstructor
 public class RpcRequest implements Serializable {
 
-    public RpcRequest() {}
+    private String requestId;
+//    public RpcRequest() {}
     /**
      * 待调用接口名称
      */
