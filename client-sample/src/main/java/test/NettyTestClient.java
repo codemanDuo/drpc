@@ -5,6 +5,7 @@ import api.HelloService;
 import core.RpcClient;
 import core.RpcClientProxy;
 import core.netty.client.NettyClient;
+import core.serializer.CommonSerializer;
 import core.serializer.KryoSerializer;
 import core.serializer.ProtobufSerializer;
 
@@ -19,13 +20,21 @@ public class NettyTestClient {
 //        System.out.println(res);
 
 
-        RpcClient client = new NettyClient();
-        client.setSerializer(new KryoSerializer());
+//        RpcClient client = new NettyClient();
+//        client.setSerializer(new KryoSerializer());
+//        RpcClientProxy rpcClientProxy = new RpcClientProxy(client);
+//        HelloService helloService = rpcClientProxy.getProxy(HelloService.class);
+//        HelloObject object = new HelloObject(12, "This is a message");
+//        String res = helloService.hello(object);
+//        System.out.println(res);
+
+        RpcClient client = new NettyClient(CommonSerializer.PROTOBUF_SERIALIZER);
         RpcClientProxy rpcClientProxy = new RpcClientProxy(client);
         HelloService helloService = rpcClientProxy.getProxy(HelloService.class);
         HelloObject object = new HelloObject(12, "This is a message");
         String res = helloService.hello(object);
         System.out.println(res);
+
 
     }
 

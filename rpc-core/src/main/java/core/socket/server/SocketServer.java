@@ -2,7 +2,7 @@ package core.socket.server;
 
 import common.enumeration.RpcError;
 import common.exception.RpcException;
-import common.util.ThreadPoolFactory;
+import common.factory.ThreadPoolFactory;
 import core.RpcServer;
 import core.handler.RequestHandler;
 import core.provider.ServiceProviderImpl;
@@ -66,9 +66,9 @@ public class SocketServer implements RpcServer {
         }
     }
 
-    @Override
-    public void setSerializer(CommonSerializer serializer) {
-        this.serializer = serializer;
-    }
+//    @Override
+//    public void setSerializer(CommonSerializer serializer) {
+//        this.serializer = serializer;
+//    }
 
 }

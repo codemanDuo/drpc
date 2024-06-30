@@ -2,7 +2,7 @@ package core.netty.server;
 
 import common.entity.RpcRequest;
 import common.entity.RpcResponse;
-import common.util.ThreadPoolFactory;
+import common.factory.ThreadPoolFactory;
 import core.handler.RequestHandler;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;

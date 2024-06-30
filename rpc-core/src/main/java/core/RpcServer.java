@@ -6,9 +6,10 @@ public interface RpcServer {
 
     void start();
 
-    void setSerializer(CommonSerializer serializer);
+//    void setSerializer(CommonSerializer serializer);
 
     <T> void publishService(Object service, Class<T> serviceClass);
+    int DEFAULT_SERIALIZER = CommonSerializer.KRYO_SERIALIZER;
 
 
 }

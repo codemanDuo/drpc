@@ -1,11 +1,11 @@
 package core.netty.server;
 
-
 import common.enumeration.RpcError;
 import common.exception.RpcException;
 import core.RpcServer;
 import core.codec.CommonDecoder;
 import core.codec.CommonEncoder;
+import core.hook.ShutdownHook;
 import core.provider.ServiceProviderImpl;
 import core.provider.ServiceProvider;
 import core.registry.NacosServiceRegistry;
@@ -18,10 +18,14 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
+import io.netty.handler.timeout.IdleStateHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
+import java.util.concurrent.TimeUnit;
+
+import static core.serializer.CommonSerializer.DEFAULT_SERIALIZER;
 
 public class NettyServer implements RpcServer {
 
@@ -34,11 +38,17 @@ public class NettyServer implements RpcServer {
 
     private CommonSerializer serializer;
 
+
     public NettyServer(String host, int port) {
+        this(host, port, DEFAULT_SERIALIZER);
+    }
+
+    public NettyServer(String host, int port, Integer serializer) {
         this.host = host;
         this.port = port;
         serviceRegistry = new NacosServiceRegistry();
         serviceProvider = new ServiceProviderImpl();
+        this.serializer = CommonSerializer.getByCode(serializer);
     }
 
     @Override
@@ -54,6 +64,7 @@ public class NettyServer implements RpcServer {
 
     @Override
     public void start() {
+        ShutdownHook.getShutdownHook().addClearAllHook();
         EventLoopGroup bossGroup = new NioEventLoopGroup();
         EventLoopGroup workerGroup = new NioEventLoopGroup();
         try {
@@ -69,9 +80,10 @@ public class NettyServer implements RpcServer {
                         @Override
                         protected void initChannel(SocketChannel ch) throws Exception {
                             ChannelPipeline pipeline = ch.pipeline();
-                            pipeline.addLast(new CommonEncoder(serializer));
-                            pipeline.addLast(new CommonDecoder());
-                            pipeline.addLast(new NettyServerHandler());
+                            pipeline.addLast(new IdleStateHandler(30, 0, 0, TimeUnit.SECONDS))
+                                    .addLast(new CommonEncoder(serializer))
+                                    .addLast(new CommonDecoder())
+                                    .addLast(new NettyServerHandler());
                         }
                     });
             ChannelFuture future = serverBootstrap.bind(host, port).sync();
@@ -84,10 +96,10 @@ public class NettyServer implements RpcServer {
             workerGroup.shutdownGracefully();
         }
     }
-    @Override
-    public void setSerializer(CommonSerializer serializer) {
-        this.serializer = serializer;
-    }
+//    @Override
+//    public void setSerializer(CommonSerializer serializer) {
+//        this.serializer = serializer;
+//    }
 
 }
 
