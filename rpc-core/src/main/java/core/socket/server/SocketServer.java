@@ -3,8 +3,10 @@ package core.socket.server;
 import common.enumeration.RpcError;
 import common.exception.RpcException;
 import common.factory.ThreadPoolFactory;
+import core.AbstractRpcServer;
 import core.RpcServer;
 import core.handler.RequestHandler;
+import core.hook.ShutdownHook;
 import core.provider.ServiceProviderImpl;
 import core.registry.NacosServiceRegistry;
 import core.registry.ServiceRegistry;
@@ -19,56 +21,41 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.*;
 
-public class SocketServer implements RpcServer {
+public class SocketServer extends AbstractRpcServer {
 
-    private static final Logger logger = LoggerFactory.getLogger(SocketServer.class);
-
-    private final ExecutorService threadPool;;
-    private final String host;
-    private final int port;
-    private CommonSerializer serializer;
-    private RequestHandler requestHandler = new RequestHandler();
-
-    private final ServiceRegistry serviceRegistry;
-    private final ServiceProvider serviceProvider;
+    private final ExecutorService threadPool;
+    private final CommonSerializer serializer;
+    private final RequestHandler requestHandler = new RequestHandler();
 
     public SocketServer(String host, int port) {
+        this(host, port, DEFAULT_SERIALIZER);
+    }
+
+    public SocketServer(String host, int port, Integer serializer) {
         this.host = host;
         this.port = port;
         threadPool = ThreadPoolFactory.createDefaultThreadPool("socket-rpc-server");
         this.serviceRegistry = new NacosServiceRegistry();
         this.serviceProvider = new ServiceProviderImpl();
-    }
-
-    @Override
-    public <T> void publishService(Object service, Class<T> serviceClass) {
-        if(serializer == null) {
-            logger.error("未设置序列化器");
-            throw new RpcException(RpcError.SERIALIZER_NOT_FOUND);
-        }
-        serviceProvider.addServiceProvider(service);
-        serviceRegistry.register(serviceClass.getCanonicalName(), new InetSocketAddress(host, port));
-        start();
+        this.serializer = CommonSerializer.getByCode(serializer);
+        scanServices();
     }
 
     @Override
     public void start() {
-        try (ServerSocket serverSocket = new ServerSocket(port)) {
+        try (ServerSocket serverSocket = new ServerSocket()) {
+            serverSocket.bind(new InetSocketAddress(host, port));
             logger.info("服务器启动……");
+            ShutdownHook.getShutdownHook().addClearAllHook();
             Socket socket;
             while ((socket = serverSocket.accept()) != null) {
                 logger.info("消费者连接: {}:{}", socket.getInetAddress(), socket.getPort());
-                threadPool.execute(new RequestHandlerThread(socket, requestHandler, serviceRegistry, serializer));
+                threadPool.execute(new SocketRequestHandlerThread(socket, requestHandler, serializer));
             }
             threadPool.shutdown();
         } catch (IOException e) {
             logger.error("服务器启动时有错误发生:", e);
         }
     }
-
-//    @Override
-//    public void setSerializer(CommonSerializer serializer) {
-//        this.serializer = serializer;
-//    }
 
 }

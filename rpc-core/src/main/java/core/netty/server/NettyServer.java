@@ -2,6 +2,7 @@ package core.netty.server;
 
 import common.enumeration.RpcError;
 import common.exception.RpcException;
+import core.AbstractRpcServer;
 import core.RpcServer;
 import core.codec.CommonDecoder;
 import core.codec.CommonEncoder;
@@ -27,17 +28,9 @@ import java.util.concurrent.TimeUnit;
 
 import static core.serializer.CommonSerializer.DEFAULT_SERIALIZER;
 
-public class NettyServer implements RpcServer {
+public class NettyServer extends AbstractRpcServer {
 
-    private static final Logger logger = LoggerFactory.getLogger(NettyServer.class);
-    private final String host;
-    private final int port;
-
-    private final ServiceRegistry serviceRegistry;
-    private final ServiceProvider serviceProvider;
-
-    private CommonSerializer serializer;
-
+    private final CommonSerializer serializer;
 
     public NettyServer(String host, int port) {
         this(host, port, DEFAULT_SERIALIZER);
@@ -49,17 +42,7 @@ public class NettyServer implements RpcServer {
         serviceRegistry = new NacosServiceRegistry();
         serviceProvider = new ServiceProviderImpl();
         this.serializer = CommonSerializer.getByCode(serializer);
-    }
-
-    @Override
-    public <T> void publishService(Object service, Class<T> serviceClass) {
-        if(serializer == null) {
-            logger.error("未设置序列化器");
-            throw new RpcException(RpcError.SERIALIZER_NOT_FOUND);
-        }
-        serviceProvider.addServiceProvider(service);
-        serviceRegistry.register(serviceClass.getCanonicalName(), new InetSocketAddress(host, port));
-        start();
+        scanServices();
     }
 
     @Override
@@ -96,10 +79,6 @@ public class NettyServer implements RpcServer {
             workerGroup.shutdownGracefully();
         }
     }
-//    @Override
-//    public void setSerializer(CommonSerializer serializer) {
-//        this.serializer = serializer;
-//    }
 
 }
 
